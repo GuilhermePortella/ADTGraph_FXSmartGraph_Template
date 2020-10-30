@@ -7,7 +7,7 @@ O ADT Graph_template tem um código base para ser explorados nos seguintes exerc
 - Compile e teste o programa fornecido. Nota: irá vizualizar o grafo usando a api SmartGraph, explicada abaixo.
 
  - Altere o método main, de forma a construir o grafo da figura abaixo.
-![pontes de Königsberg](examples/exercicio_grafo.png)
+![pontes de Königsberg](images/exercicio_grafo.png)
 
 
 # (JavaFX) SmartGraph
