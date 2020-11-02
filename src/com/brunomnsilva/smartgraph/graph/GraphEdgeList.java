@@ -25,9 +25,11 @@ package com.brunomnsilva.smartgraph.graph;
 
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * ADT Graph implementation that stores a collection of edges (and vertices) and
@@ -44,12 +46,15 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
 
     /* inner classes are defined at the end of the class, so are the auxiliary methods 
      */
-    private Set<Vertex<V>> vertices;
-    private Set< Edge<E, V>> edges;
+    private Map<V, Vertex<V>> vertices;
+    private Map<E, Edge<E, V>> edges;
 
-       public GraphEdgeList() {
-        this.vertices = new HashSet<>();
-        this.edges = new HashSet<>();
+    /**
+     * Creates a empty graph.
+     */
+    public GraphEdgeList() {
+        this.vertices = new HashMap<>();
+        this.edges = new HashMap<>();
     }
 
     @Override
@@ -64,14 +69,20 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
 
     @Override
     public Collection<Vertex<V>> vertices() {
-       Set<Vertex<V>> set = new HashSet<>(vertices);
-        return set;
+        List<Vertex<V>> list = new ArrayList<>();
+        for (Vertex<V> v : vertices.values()) {
+            list.add(v);
+        }
+        return list;
     }
 
     @Override
     public Collection<Edge<E, V>> edges() {
-        Set<Edge<E,V>> set = new HashSet<>(edges);
-        return set;
+        List<Edge<E, V>> list = new ArrayList<>();
+        for (Edge<E, V> e : edges.values()) {
+            list.add(e);
+        }
+        return list;
     }
 
     @Override
@@ -82,14 +93,34 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
 
     @Override
     public Vertex<V> opposite(Vertex<V> v, Edge<E, V> e) throws InvalidVertexException, InvalidEdgeException {
-        throw new NotImplementedException();
+        checkVertex(v);
+        MyEdge edge = checkEdge(e);
+
+        if (!edge.contains(v)) {
+            return null; /* this edge does not connect vertex v */
+        }
+
+        if (edge.vertices()[0] == v) {
+            return edge.vertices()[1];
+        } else {
+            return edge.vertices()[0];
+        }
 
     }
 
     @Override
     public synchronized boolean areAdjacent(Vertex<V> u, Vertex<V> v) throws InvalidVertexException {
         //we allow loops, so we do not check if u == v
-        throw new NotImplementedException();
+        checkVertex(v);
+        checkVertex(u);
+
+        /* find and edge that contains both u and v */
+        for (Edge<E, V> edge : edges.values()) {
+            if (((MyEdge) edge).contains(u) && ((MyEdge) edge).contains(v)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -100,7 +131,7 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
 
         MyVertex newVertex = new MyVertex(vElement);
 
-        vertices.add(newVertex);
+        vertices.put(vElement, newVertex);
 
         return newVertex;
     }
@@ -113,6 +144,31 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
 
     }
 
+    @Override
+    public synchronized Edge<E, V> insertEdge(V vElement1, V vElement2, E edgeElement) 
+            throws InvalidVertexException, InvalidEdgeException {
+        
+        if (existsEdgeWith(edgeElement)) {
+            throw new InvalidEdgeException("There's already an edge with this element.");
+        }
+
+        if (!existsVertexWith(vElement1)) {
+            throw new InvalidVertexException("No vertex contains " + vElement1);
+        }
+        if (!existsVertexWith(vElement2)) {
+            throw new InvalidVertexException("No vertex contains " + vElement2);
+        }
+
+        MyVertex outVertex = vertexOf(vElement1);
+        MyVertex inVertex = vertexOf(vElement2);
+
+        MyEdge newEdge = new MyEdge(edgeElement, outVertex, inVertex);
+
+        edges.put(edgeElement, newEdge);
+
+        return newEdge;
+
+    }
 
     @Override
     public synchronized V removeVertex(Vertex<V> v) throws InvalidVertexException {
@@ -123,31 +179,49 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
         //remove incident edges
         Iterable<Edge<E, V>> incidentEdges = incidentEdges(v);
         for (Edge<E, V> edge : incidentEdges) {
-            edges.remove(edge);
+            edges.remove(edge.element());
         }
 
-        vertices.remove(v);
+        vertices.remove(v.element());
 
         return element;
     }
 
     @Override
     public synchronized E removeEdge(Edge<E, V> e) throws InvalidEdgeException {
-        throw new NotImplementedException();
+      throw new NotImplementedException();
     }
 
     @Override
     public V replace(Vertex<V> v, V newElement) throws InvalidVertexException {
-        throw new NotImplementedException();
+        if (existsVertexWith(newElement)) {
+            throw new InvalidVertexException("There's already a vertex with this element.");
+        }
+
+        MyVertex vertex = checkVertex(v);
+
+        V oldElement = vertex.element;
+        vertex.element = newElement;
+
+        return oldElement;
     }
 
     @Override
     public E replace(Edge<E, V> e, E newElement) throws InvalidEdgeException {
-        throw new NotImplementedException();
+        if (existsEdgeWith(newElement)) {
+            throw new InvalidEdgeException("There's already an edge with this element.");
+        }
+
+        MyEdge edge = checkEdge(e);
+
+        E oldElement = edge.element;
+        edge.element = newElement;
+
+        return oldElement;
     }
 
     private MyVertex vertexOf(V vElement) {
-        for (Vertex<V> v : vertices) {
+        for (Vertex<V> v : vertices.values()) {
             if (v.element().equals(vElement)) {
                 return (MyVertex) v;
             }
@@ -156,17 +230,11 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
     }
 
     private boolean existsVertexWith(V vElement) {
-        for(Vertex<V> v: vertices)
-            if(v.element().equals(vElement))
-                return true;
-        return false;
+        return vertices.containsKey(vElement);
     }
 
     private boolean existsEdgeWith(E edgeElement) {
-        for(Edge<E,V> e: edges)
-            if(e.element().equals(edgeElement))
-                return true;
-        return false;
+        return edges.containsKey(edgeElement);
     }
 
     @Override
@@ -176,11 +244,11 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
         );
 
         sb.append("--- Vertices: \n");
-        for (Vertex<V> v : vertices) {
+        for (Vertex<V> v : vertices.values()) {
             sb.append("\t").append(v.toString()).append("\n");
         }
         sb.append("\n--- Edges: \n");
-        for (Edge<E, V> e : edges) {
+        for (Edge<E, V> e : edges.values()) {
             sb.append("\t").append(e.toString()).append("\n");
         }
         return sb.toString();
@@ -259,7 +327,7 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
             throw new InvalidVertexException("Not a vertex.");
         }
 
-        if (!vertices.contains(vertex)) {
+        if (!vertices.containsKey(vertex.element)) {
             throw new InvalidVertexException("Vertex does not belong to this graph.");
         }
 
@@ -276,7 +344,7 @@ public class GraphEdgeList<V, E> implements Graph<V, E> {
             throw new InvalidVertexException("Not an adge.");
         }
 
-        if (!edges.contains(edge)) {
+        if (!edges.containsKey(edge.element)) {
             throw new InvalidEdgeException("Edge does not belong to this graph.");
         }
 
