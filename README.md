@@ -1,5 +1,7 @@
 # ( ADT Graph_Template) + (JavaFX) SmartGraph
 
+## (ADT Graph_Template)
+
 O ADT Graph_template tem um código base para ser explorados nos seguintes exercícios:
 
 - Forneça o código dos métodos por implementar, i.e., os que estão a  lançar	NotImplementedException ;
@@ -7,10 +9,12 @@ O ADT Graph_template tem um código base para ser explorados nos seguintes exerc
 - Compile e teste o programa fornecido. Nota: irá vizualizar o grafo usando a api SmartGraph, explicada abaixo.
 
  - Altere o método main, de forma a construir o grafo da figura abaixo.
+ 
+ 
 ![pontes de Königsberg](examples/exercicio_grafoPK.png)
 
 
-# (JavaFX) SmartGraph
+## (JavaFX) SmartGraph
 
 This project provides a generic (Java FX) **graph visualization library** that can automatically arrange the vertices' locations
 through a [force-directed algorithm](https://en.wikipedia.org/wiki/Force-directed_graph_drawing) in real-time.
